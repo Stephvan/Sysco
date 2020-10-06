@@ -31,27 +31,27 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- task: UseDotNet@2
-  displayName: 'Use .NET Core SDK 3.1.300'
+- task: NuGetToolInstaller@1
+  displayName: 'Use NuGet '
   inputs:
-    packageType: sdk
-    version: 3.1.300
+    checkLatest: true
 
-- task: Npm@1
-  displayName: 'Run npm install'
+- task: NuGetCommand@2
+  displayName: 'NuGet restore $(Build.SourcesDirectory)/*.sln'
   inputs:
-    verbose: false
-
-# - script: './node_modules/.bin/node-sass Tailspin.SpaceGame.Web/wwwroot --output Tailspin.SpaceGame.Web/wwwroot'
-#   displayName: 'Compile Sass assets'
-
-- task: gulp@1
-  displayName: 'Run gulp tasks'
-
+    restoreSolution: '**/*.csproj'
+    feedsToUse: config
+    nugetConfigPath: Application/nuget.config
+    restoreDirectory: '$(Pipeline.Workspace)/packages'
 
 - task: DotNetCoreCLI@2
-  displayName: 'Build the project - Release'
+  displayName: Restore
   inputs:
-    command: 'build'
-    arguments: '--no-restore --configuration Release'
-    projects: '**/*.csproj'
+    command: restore
+    projects: '$(Parameters.RestoreBuildProjects)'
+
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    projects: '$(Parameters.RestoreBuildProjects)'
+    arguments: '--configuration $(BuildConfiguration)'
